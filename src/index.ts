@@ -206,11 +206,11 @@ const startServer = new Listr(
             resave: false,
             saveUninitialized: false,
             cookie: {
-              httpOnly: isProduction ? false : true,
+              httpOnly: isProduction ? true : true,
               secure: isProduction ? true : false,
-              sameSite: isProduction ? false : false,
+              sameSite: isProduction ? 'none' : true,
               maxAge: ms(process.env.SESS_LIFETIME as string),
-              path: isProduction ? '/graphql' : '/graphql', // Done for testing resolvers in playground
+              path: isProduction ? '/' : '/graphql', // Done for testing resolvers in playground
             },
           })
         )
@@ -329,7 +329,7 @@ const startServer = new Listr(
           observer.next('Starting ...')
           ctx.app_server = httpserver
             .listen({
-              port: isTest ? 0 : process.env.PORT || 4000,
+              port: isTest ? 0 : isProduction ? process.env.PORT : 4000,
             })
             .setTimeout(5000, () => {
               observer.error('Server timed out')

@@ -101,5 +101,6 @@
       "json",
       "node"
     ]
-  }
+  },
+  "proxy": "http://localhost:4000/graphql"
 }
