@@ -36,7 +36,6 @@
     "typescript": "^3.9.3"
   },
   "dependencies": {
-    "@upfg/common": "1.0.0",
     "apollo-server-express": "^2.13.1",
     "argon2": "^0.26.2",
     "bcryptjs": "^2.4.3",
