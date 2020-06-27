@@ -173,16 +173,17 @@ const startServer = new Listr(
     {
       title: 'Using Cors',
       task: (ctx: any) => {
-        // const whitelist = [process.env.CORS_WHITELISTS as string]
         ctx.app.use(
-          // '*',
+          '*',
           cors({
-            credentials: true,
             origin: isTest
               ? '*'
               : isProduction
-              ? (process.env.FRONTEND_HOST as string)
+              ? [process.env.FRONTEND_HOST as string]
               : [webUrl],
+            credentials: true,
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            preflightContinue: false,
           })
         )
       },
@@ -318,24 +319,6 @@ const startServer = new Listr(
           app: ctx.app,
           path: isProduction ? '/' : '/graphql',
           cors: isProduction ? true : false,
-        })
-      },
-    },
-    {
-      title: 'Applying RES header with CORS',
-      task: (ctx: any) => {
-        ctx.app.use(function (req: any, res: any, next: any) {
-          res.header('Access-Control-Allow-Origin', req.header('Origin'))
-          res.header('Access-Control-Allow-Credentials', true)
-          res.header(
-            'Access-Control-Allow-Headers',
-            'Origin, X-Requested-With, Content-Type, Accept'
-          )
-          res.header(
-            'Access-Control-Allow-Methods',
-            'GET, POST, OPTIONS, PUT, DELETE'
-          )
-          next()
         })
       },
     },
