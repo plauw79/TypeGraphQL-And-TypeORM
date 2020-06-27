@@ -12,7 +12,7 @@ import { InjectRepository } from 'typeorm-typedi-extensions'
 import { getConnection } from 'typeorm'
 import * as fs from 'fs'
 
-import { ProfileYupSchema, formatYupError } from '@upfg/common'
+// import { ProfileYupSchema, formatYupError } from '@upfg/common'
 import { Error } from '../../entity/_authTypes'
 import { Context } from '../../types/context'
 import { formatResponse } from '../../utils/formatResponse'
@@ -106,13 +106,13 @@ export class UserProfileResolver {
     @Arg('input') profileInput: ProfileInput,
     @Ctx() { req, userLoader }: Context
   ): Promise<ValidationResponse | Error[]> {
-    try {
-      await ProfileYupSchema.validate(profileInput, {
-        abortEarly: false,
-      })
-    } catch (err) {
-      return formatYupError(err)
-    }
+    // try {
+    //   await ProfileYupSchema.validate(profileInput, {
+    //     abortEarly: false,
+    //   })
+    // } catch (err) {
+    //   return formatYupError(err)
+    // }
 
     const userId = await userLoader.load(req.session!.userId)
 
