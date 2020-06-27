@@ -5,7 +5,7 @@ import {
   BaseEntity,
   OneToMany,
   OneToOne,
-  JoinColumn,
+  // JoinColumn,
 } from 'typeorm'
 import { ObjectType, Field, ID } from 'type-graphql'
 import { Recipe } from './Recipe'
@@ -66,29 +66,21 @@ export class User extends BaseEntity {
   @Column('bool', { default: false })
   loggedInStatus: boolean
 
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  profileId: string
-
-  @Field({ nullable: true })
-  @Column({ nullable: true })
-  addTodoId: string
-
   @OneToOne(() => Profile, (profile) => profile.user, {
     eager: true,
+    // cascade: true,
     onDelete: 'CASCADE',
   })
-  @JoinColumn({ name: 'profileId' })
-  profile: Profile
+  profile?: Profile
 
   @OneToOne(() => AddTodo, (addTodo) => addTodo.user, {
+    // cascade: true,
     onDelete: 'CASCADE',
-  }) // specify inverse side as a second parameter
-  @JoinColumn({ name: 'addTodoId' })
+  })
   addTodo: AddTodo
 
   @OneToMany(() => Recipe, (recipe) => recipe.user, {
-    cascade: true,
+    // cascade: true,
     onDelete: 'CASCADE',
   })
   recipes: Promise<Recipe[]>

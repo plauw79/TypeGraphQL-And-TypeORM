@@ -18,7 +18,7 @@ export class Recipe extends BaseEntity {
 
   @Field({ nullable: true })
   @Column('text', { nullable: true })
-  imgUrl: string
+  imgUrl?: string
 
   @Field()
   // @Column('text', { unique: true })
@@ -33,13 +33,17 @@ export class Recipe extends BaseEntity {
   @Column('text')
   content: string
 
-  @Field()
-  @Column('text')
-  createdAt: string
+  @Field({ nullable: true })
+  @Column('text', { nullable: true })
+  createdAt?: string
 
   @Field({ nullable: true })
   @Column('text', { nullable: true })
-  owner: string
+  displayOwner?: string
+
+  @Field({ nullable: true })
+  @Column('text', { nullable: true })
+  owner?: string
 
   @ManyToOne(() => User, (user) => user.recipes, {
     onDelete: 'CASCADE',

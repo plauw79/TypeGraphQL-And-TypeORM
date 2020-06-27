@@ -12,9 +12,8 @@ import { InjectRepository } from 'typeorm-typedi-extensions'
 import { getConnection } from 'typeorm'
 import * as fs from 'fs'
 
-// import * as validations from '../../helpers/validations'
-// import { formatYupError } from '../../helpers/validations'
-// import { Error } from '../../entity/_authTypes'
+import { ProfileYupSchema, formatYupError } from '@upfg/common'
+import { Error } from '../../entity/_authTypes'
 import { Context } from '../../types/context'
 import { formatResponse } from '../../utils/formatResponse'
 import { ProfileRepo } from '../../repos/profileRepo'
@@ -106,14 +105,14 @@ export class UserProfileResolver {
     @Arg('profileId', { nullable: true }) profileId: string,
     @Arg('input') profileInput: ProfileInput,
     @Ctx() { req, userLoader }: Context
-  ): Promise<ValidationResponse> {
-    // try {
-    //   await validations.ProfileYupSchema.validate(profileInput, {
-    //     abortEarly: false,
-    //   })
-    // } catch (err) {
-    //   return formatYupError(err)
-    // }
+  ): Promise<ValidationResponse | Error[]> {
+    try {
+      await ProfileYupSchema.validate(profileInput, {
+        abortEarly: false,
+      })
+    } catch (err) {
+      return formatYupError(err)
+    }
 
     const userId = await userLoader.load(req.session!.userId)
 
@@ -121,7 +120,7 @@ export class UserProfileResolver {
       relations: ['profile'],
     })
 
-    if (userId.profileId === null) {
+    if (userProfile?.profile === null) {
       const avatarUrlTemp = profileInput.avatar
         ? await processUpload(avatarDir, profileInput.avatar)
         : null
@@ -132,8 +131,8 @@ export class UserProfileResolver {
       return {
         ok: true,
       }
-    } else if (userId.profileId !== null) {
-      if (profileId === userId.profileId) {
+    } else if (userProfile?.profile?.id !== null) {
+      if (profileId === userProfile?.profile?.id) {
         let prevAvatar = profileInput.avatarUrl
         let updatedAvatar = profileInput.avatarUrl
         if (profileInput.avatar) {
@@ -155,7 +154,7 @@ export class UserProfileResolver {
             profileInput.avatarUrl = updatedAvatar
           }
         }
-        await this.profileRepo.update(userProfile!.profile.id, profileInput)
+        await this.profileRepo.update(userProfile?.profile?.id, profileInput)
         formatResponse(
           new Response('profileUpdate:', `updated: ${userProfile?.email}`)
         )

@@ -2,7 +2,6 @@ import 'reflect-metadata'
 import 'dotenv/config'
 
 import chalk from 'chalk'
-
 import Redis from 'ioredis'
 import Listr from 'listr'
 import ms from 'ms'
@@ -11,12 +10,11 @@ import express from 'express'
 import session from 'express-session'
 import connectRedis from 'connect-redis'
 import passport from 'passport'
-
+import morgan from 'morgan'
 import * as path from 'path'
 import * as fs from 'fs'
 import * as http from 'http'
 import * as TypeORM from 'typeorm'
-import morgan from 'morgan'
 import { ApolloServer } from 'apollo-server-express'
 import { RedisPubSub } from 'graphql-redis-subscriptions'
 import { graphqlUploadExpress } from 'graphql-upload'
@@ -156,21 +154,6 @@ const startServer = new Listr(
         ),
     },
     {
-      title: 'Using Winston And Morgan For Logging',
-      task: (ctx: any) => {
-        if (isProduction) {
-          var logDirectory = path.join(__dirname, '../logs')
-          fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
-          // ctx.app.use(morgan('combined', { stream: logger.stream }))
-          ctx.app.use(morgan('short', { stream: logger.stream }))
-          ctx.app.use(function (err: any, req: any, res: any, _next: any) {
-            logger.error(logger.combinedFormat(err, req, res))
-            res.status(err.status || 500).send('Internal server error.')
-          })
-        }
-      },
-    },
-    {
       title: 'Using Express Static Path',
       task: async (ctx: any) => {
         ctx.app.use('/images', express.static('images'))
@@ -192,12 +175,54 @@ const startServer = new Listr(
             cookie: {
               httpOnly: isProduction ? true : true,
               secure: isProduction ? true : false,
-              sameSite: isProduction ? 'none' : true,
+              sameSite: isProduction ? 'none' : 'none',
               maxAge: ms(process.env.SESS_LIFETIME as string),
-              path: isProduction ? '/' : '/graphql', // Done for testing resolvers in playground
+              path: isProduction ? '/' : '/graphql',
             },
           })
         )
+      },
+    },
+    {
+      title: 'Using Cors',
+      task: (ctx: any) => {
+        ctx.app.use(
+          '*',
+          cors({
+            origin: isTest
+              ? '*'
+              : isProduction
+              ? [process.env.FRONTEND_HOST as string]
+              : [webUrl],
+            credentials: true,
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            preflightContinue: false,
+          })
+        )
+      },
+    },
+    {
+      title: 'Applying middleware to ApolloServer',
+      task: (ctx: any) => {
+        ctx.app.use(
+          graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })
+        )
+        ctx.server.applyMiddleware({
+          app: ctx.app,
+          path: isProduction ? '/' : '/graphql',
+          cors: isProduction ? false : false,
+        })
+      },
+    },
+    {
+      title: 'Using Redis Cache',
+      task: async (ctx: any) => {
+        await ctx.redis.del(constants.recipeCacheKey)
+        const recipes = await Recipe.find()
+        const recipeStrings = recipes.map((x) => JSON.stringify(x))
+        if (recipeStrings.length) {
+          await ctx.redis.lpush(constants.recipeCacheKey, ...recipeStrings)
+        }
       },
     },
     {
@@ -281,45 +306,18 @@ const startServer = new Listr(
       },
     },
     {
-      title: 'Using Redis Cache',
-      task: async (ctx: any) => {
-        await ctx.redis.del(constants.recipeCacheKey)
-        const recipes = await Recipe.find()
-        const recipeStrings = recipes.map((x) => JSON.stringify(x))
-        if (recipeStrings.length) {
-          await ctx.redis.lpush(constants.recipeCacheKey, ...recipeStrings)
-        }
-      },
-    },
-    {
-      title: 'Using Cors',
+      title: 'Using Winston And Morgan For Logging',
       task: (ctx: any) => {
-        ctx.app.use(
-          '*',
-          cors({
-            origin: isTest
-              ? '*'
-              : isProduction
-              ? [process.env.FRONTEND_HOST as string]
-              : [webUrl],
-            credentials: true,
-            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-            preflightContinue: false,
+        if (isProduction) {
+          var logDirectory = path.join(__dirname, '../logs')
+          fs.existsSync(logDirectory) || fs.mkdirSync(logDirectory)
+          // ctx.app.use(morgan('combined', { stream: logger.stream }))
+          ctx.app.use(morgan('short', { stream: logger.stream }))
+          ctx.app.use(function (err: any, req: any, res: any, _next: any) {
+            logger.error(logger.combinedFormat(err, req, res))
+            res.status(err.status || 500).send('Internal server error.')
           })
-        )
-      },
-    },
-    {
-      title: 'Applying middleware to ApolloServer',
-      task: (ctx: any) => {
-        ctx.app.use(
-          graphqlUploadExpress({ maxFileSize: 10000000, maxFiles: 10 })
-        )
-        ctx.server.applyMiddleware({
-          app: ctx.app,
-          path: isProduction ? '/' : '/graphql',
-          cors: isProduction ? true : false,
-        })
+        }
       },
     },
     {

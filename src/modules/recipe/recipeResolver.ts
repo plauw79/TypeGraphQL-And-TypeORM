@@ -11,12 +11,11 @@ import {
 import { InjectRepository } from 'typeorm-typedi-extensions'
 import * as fs from 'fs'
 
-import * as validations from '../../helpers/validations'
-import { formatYupError } from '../../helpers/validations'
+// import { formatYupError, RecipesYupSchema } from '@upfg/common'
 import { RecipeRepo } from '../../repos/recipeRepo'
 import { Recipe } from '../../entity/Recipe'
-import { CreateRecipeInput } from './createRecipeInput'
-import { UpdateRecipeInput } from './updateRecipeInput'
+import { RecipeInput } from './recipeInput'
+// import { UpdateRecipeInput } from './updateRecipeInput'
 import { Error } from '../../entity/_authTypes'
 import { Context } from '../../types/context'
 import * as constant from '../../helpers/constants'
@@ -93,52 +92,46 @@ export class RecipeResolver {
 
   @UseMiddleware(isAuth)
   @Query(() => [Recipe], { nullable: true })
-  // async listRecipes(): Promise<Recipe[] | undefined> {
   async listRecipes(@Ctx() { redis }: Context): Promise<Recipe[] | undefined> {
+    const recipes = (await redis.lrange(constant.recipeCacheKey, 0, -1)) || []
     formatResponse(
       new Response('recipeList', 'lists of recipes with redis Cache', false)
     )
-    const recipes = (await redis.lrange(constant.recipeCacheKey, 0, -1)) || []
     return recipes.map((x: string) => JSON.parse(x))
-
-    // return this.recipeRepo.find()
   }
 
   @UseMiddleware(isAuth)
   @Mutation(() => ValidationResponse)
   async createRecipe(
-    @Arg('input') { owner, imgUrl, ...createRecipeInput }: CreateRecipeInput,
+    @Arg('title') title: string,
+    @Arg('input')
+    {
+      owner,
+      displayOwner,
+      createdAt,
+      imgUrl,
+      ...createRecipeInput
+    }: RecipeInput,
     @Ctx() { req, redis, userLoader }: Context
   ): Promise<ValidationResponse | Error[]> {
-    try {
-      await validations.RecipesYupSchema.validate(createRecipeInput, {
-        abortEarly: false,
-      })
-    } catch (err) {
-      return formatYupError(err)
-    }
-
+    // try {
+    //   await RecipesYupSchema.validate(createRecipeInput, {
+    //     abortEarly: false,
+    //   })
+    // } catch (err) {
+    //   return formatYupError(err)
+    // }
     const userId = await userLoader.load(req.session!.userId)
 
-    const titleTemp = createRecipeInput.title
-
     const recipeAlreadyExists = await this.recipeRepo.findOne({
-      where: { title: titleTemp },
+      where: { title: title },
       select: ['id'],
     })
-
-    const ownerID = req.session!.userId
-    // const ownerID = userId?.email
 
     if (recipeAlreadyExists) {
       return {
         errors: [
-          formatResponse(
-            new Response(
-              createRecipeInput.title,
-              `${createRecipeInput.title} -- duplicateRecipe`
-            )
-          ),
+          formatResponse(new Response('title', `${title} -- duplicateRecipe`)),
         ],
       }
     }
@@ -149,8 +142,11 @@ export class RecipeResolver {
 
     const recipe = this.recipeRepo
       .create({
-        owner: ownerID,
         imgUrl: imgUrlTemp,
+        title: title,
+        createdAt: `${new Date()}`,
+        displayOwner: userId.email,
+        owner: req.session!.userId,
         ...createRecipeInput,
       })
       .save()
@@ -160,11 +156,11 @@ export class RecipeResolver {
 
     return {
       ok: true,
-      errors: [
+      message: [
         formatResponse(
           new Response(
             `recipeCreate`,
-            `title:${createRecipeInput.title} by ${userId?.email}`,
+            `title:${title} by ${userId?.email}`,
             false
           )
         ),
@@ -176,16 +172,18 @@ export class RecipeResolver {
   @Mutation(() => ValidationResponse)
   async updateRecipe(
     @Arg('recipeId') recipeId: string,
-    @Arg('input') updateRecipeInput: UpdateRecipeInput,
+    @Arg('title') title: string,
+    @Arg('input')
+    { owner, displayOwner, ...updateRecipeInput }: RecipeInput,
     @Ctx() { req, redis, userLoader }: Context
   ): Promise<ValidationResponse | Error[]> {
-    try {
-      await validations.RecipesYupSchema.validate(updateRecipeInput, {
-        abortEarly: false,
-      })
-    } catch (err) {
-      return formatYupError(err)
-    }
+    // try {
+    //   await RecipesYupSchema.validate(updateRecipeInput, {
+    //     abortEarly: false,
+    //   })
+    // } catch (err) {
+    //   return formatYupError(err)
+    // }
     const userId = await userLoader.load(req.session!.userId)
     const recipe = await this.recipeRepo.findOne(recipeId)
     // const recipe = await recipeLoader.load(recipeId)
@@ -226,7 +224,13 @@ export class RecipeResolver {
     }
     const updatedRecipe = await this.recipeRepo.save({
       ...recipe,
-      ...updateRecipeInput,
+      title: title,
+      imgUrl: updateRecipeInput.imgUrl,
+      ingredients: updateRecipeInput.ingredients,
+      content: updateRecipeInput.content,
+      createdAt: updateRecipeInput.createdAt,
+      displayOwner: userId.email,
+      owner: req.session!.userId,
     })
     const recipes = await redis.lrange(constant.recipeCacheKey, 0, -1)
     const idx = recipes.findIndex((x: string) => JSON.parse(x).id === recipeId)
@@ -238,11 +242,11 @@ export class RecipeResolver {
 
     return {
       ok: true,
-      errors: [
+      message: [
         formatResponse(
           new Response(
             `recipeUpdate`,
-            `title: ${updateRecipeInput.title} -- ${recipe?.id}`,
+            `title: ${title} -- ${recipe?.id}`,
             false
           )
         ),

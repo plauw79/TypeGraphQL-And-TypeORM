@@ -4,6 +4,7 @@ import {
   Column,
   BaseEntity,
   OneToOne,
+  JoinColumn,
 } from 'typeorm'
 import { ObjectType, Field, ID } from 'type-graphql'
 import { User } from './User'
@@ -23,8 +24,17 @@ export class AddTodo extends BaseEntity {
   @Column('text')
   completed: boolean
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  displayOwner?: string
+
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  owner?: string
+
   @OneToOne(() => User, (user) => user.addTodo, {
     onDelete: 'CASCADE',
-  }) // specify inverse side as a second parameter
+  })
+  @JoinColumn({ name: 'owner' })
   user: User
 }

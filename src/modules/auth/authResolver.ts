@@ -4,6 +4,8 @@ import { InjectRepository } from 'typeorm-typedi-extensions'
 // import * as argon2 from 'argon2'
 import * as bcrypt from 'bcryptjs'
 
+// import { AuthYupSchema, formatYupError } from '@upfg/common'
+import { Error } from '../../entity/_authTypes'
 import { LoginResponse, AuthStatus } from '../../entity/_authTypes'
 import { User } from '../../entity/User'
 import { Context } from '../../types/context'
@@ -14,8 +16,6 @@ import { formatResponse } from '../../utils/formatResponse'
 import { Response } from '../../entity/_responseTypes'
 import * as constant from '../../helpers/constants'
 import { ValidationResponse } from '../../entity/_validationTypes'
-// import * as validations from '../../helpers/validations'
-// import { formatYupError } from '../../helpers/validations'
 
 @Resolver(User)
 export class AuthResolver {
@@ -51,9 +51,9 @@ export class AuthResolver {
     @Arg('email') email: string,
     @Arg('input')
     { password, ...signupInput }: SignupInput
-  ): Promise<ValidationResponse> {
+  ): Promise<ValidationResponse | Error[]> {
     // try {
-    //   await validations.AuthYupSchema.validate(signupInput, {
+    //   await AuthYupSchema.validate(signupInput, {
     //     abortEarly: false,
     //   })
     // } catch (err) {
@@ -139,6 +139,7 @@ export class AuthResolver {
 
     if (user.loggedInStatus == true) {
       removeAllUsersSessions(user.id, redis, session.id)
+      redis.del(`${constant.userSessionIdPrefix}${user.id}`)
 
       this.userRepo.setLoggedInStatus({
         id: user.id,

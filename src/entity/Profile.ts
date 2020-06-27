@@ -4,6 +4,7 @@ import {
   Column,
   BaseEntity,
   OneToOne,
+  JoinColumn,
 } from 'typeorm'
 import { ObjectType, Field, ID } from 'type-graphql'
 import { User } from './User'
@@ -43,9 +44,14 @@ export class Profile extends BaseEntity {
   @Column('text')
   maritalStatus?: string
 
+  @Field({ nullable: true })
+  @Column({ nullable: true })
+  userId?: string
+
   @OneToOne(() => User, (user) => user.profile, {
     nullable: true,
     onDelete: 'CASCADE',
-  }) // specify inverse side as a second parameter
+  })
+  @JoinColumn({ name: 'userId' })
   user: User
 }

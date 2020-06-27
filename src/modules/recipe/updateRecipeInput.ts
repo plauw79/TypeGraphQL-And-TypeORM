@@ -7,11 +7,11 @@ import { GraphQLUpload } from 'graphql-upload'
 @InputType()
 export class UpdateRecipeInput implements Partial<Recipe> {
   @Field(() => GraphQLUpload, { nullable: true })
-  image: Upload
+  image?: Upload
 
   @Field({ nullable: true })
   @IsString()
-  imgUrl: string
+  imgUrl?: string
 
   @Field()
   @IsString()
@@ -25,10 +25,15 @@ export class UpdateRecipeInput implements Partial<Recipe> {
   @IsString()
   content: string
 
-  @Field()
+  @Field({ nullable: true })
   @IsString()
-  createdAt: string
+  createdAt?: string
 
-  @Field()
-  owner: string
+  @Field({ nullable: true })
+  @IsString()
+  displayOwner?: string
+
+  @Field({ nullable: true })
+  @IsString()
+  owner?: string
 }
