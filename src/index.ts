@@ -322,6 +322,24 @@ const startServer = new Listr(
       },
     },
     {
+      title: 'Applying RES header with CORS',
+      task: (ctx: any) => {
+        ctx.app.use(function (req: any, res: any, next: any) {
+          res.header('Access-Control-Allow-Origin', req.header('Origin'))
+          res.header('Access-Control-Allow-Credentials', true)
+          res.header(
+            'Access-Control-Allow-Headers',
+            'Origin, X-Requested-With, Content-Type, Accept'
+          )
+          res.header(
+            'Access-Control-Allow-Methods',
+            'GET, POST, OPTIONS, PUT, DELETE'
+          )
+          next()
+        })
+      },
+    },
+    {
       title: 'Finishing Server',
       task: (ctx: any) => {
         const httpserver = http.createServer(ctx.app)
