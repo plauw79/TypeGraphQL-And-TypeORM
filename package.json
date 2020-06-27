@@ -28,6 +28,7 @@
     "@types/passport": "^1.0.3",
     "@types/shortid": "^0.0.29",
     "@types/uuid": "^8.0.0",
+    "@types/yup": "^0.29.3",
     "cross-env": "^7.0.2",
     "rimraf": "^3.0.2",
     "ts-jest": "^26.0.0",
@@ -75,7 +76,8 @@
     "typeorm-typedi-extensions": "^0.2.3",
     "uuid": "^8.1.0",
     "winston": "^3.2.1",
-    "winston-daily-rotate-file": "^4.4.2"
+    "winston-daily-rotate-file": "^4.4.2",
+    "yup": "^0.29.1"
   },
   "resolutions": {},
   "scripts": {
