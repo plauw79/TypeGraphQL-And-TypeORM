@@ -316,7 +316,7 @@ const startServer = new Listr(
         ctx.server.applyMiddleware({
           app: ctx.app,
           path: isProduction ? '/' : '/graphql',
-          cors: isProduction ? false : false,
+          cors: isProduction ? true : false,
         })
       },
     },
