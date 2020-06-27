@@ -175,28 +175,14 @@ const startServer = new Listr(
       task: (ctx: any) => {
         // const whitelist = [process.env.CORS_WHITELISTS as string]
         ctx.app.use(
-          isProduction ? (process.env.CORS_WHITELISTS as string) : '*',
+          // '*',
           cors({
             credentials: true,
-            origin:
-              // function (origin, callback) {
-              //   if (whitelist.indexOf(origin) !== -1) {
-              //     isTest
-              //       ? '*'
-              //       : isProduction
-              //       ? (process.env.FRONTEND_HOST as string)
-              //       : [webUrl],
-              //       callback(null, true)
-              //   } else {
-              //     callback(new Error('Not allowed by CORS'))
-              //   }
-              // },
-
-              isTest
-                ? '*'
-                : isProduction
-                ? (process.env.FRONTEND_HOST as string)
-                : [webUrl],
+            origin: isTest
+              ? '*'
+              : isProduction
+              ? (process.env.FRONTEND_HOST as string)
+              : [webUrl],
           })
         )
       },
