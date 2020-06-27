@@ -179,9 +179,9 @@ const startServer = new Listr(
             credentials: true,
             origin: isTest
               ? '*'
-              : isDevelopment
-              ? [webUrl]
-              : (process.env.FRONTEND_HOST as string),
+              : isProduction
+              ? (process.env.FRONTEND_HOST as string)
+              : [webUrl],
           })
         )
       },
@@ -315,7 +315,7 @@ const startServer = new Listr(
         )
         ctx.server.applyMiddleware({
           app: ctx.app,
-          path: '/graphql',
+          path: isProduction ? '/' : '/graphql',
           cors: isProduction ? false : false,
         })
       },
