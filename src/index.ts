@@ -171,24 +171,6 @@ const startServer = new Listr(
       },
     },
     {
-      title: 'Using Cors',
-      task: (ctx: any) => {
-        ctx.app.use(
-          '*',
-          cors({
-            origin: isTest
-              ? '*'
-              : isProduction
-              ? [process.env.FRONTEND_HOST as string]
-              : [webUrl],
-            credentials: true,
-            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-            preflightContinue: false,
-          })
-        )
-      },
-    },
-    {
       title: 'Using Express Static Path',
       task: async (ctx: any) => {
         ctx.app.use('/images', express.static('images'))
@@ -310,6 +292,24 @@ const startServer = new Listr(
       },
     },
     {
+      title: 'Using Cors',
+      task: (ctx: any) => {
+        ctx.app.use(
+          '*',
+          cors({
+            origin: isTest
+              ? '*'
+              : isProduction
+              ? [process.env.FRONTEND_HOST as string]
+              : [webUrl],
+            credentials: true,
+            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            preflightContinue: false,
+          })
+        )
+      },
+    },
+    {
       title: 'Applying middleware to ApolloServer',
       task: (ctx: any) => {
         ctx.app.use(
@@ -318,7 +318,7 @@ const startServer = new Listr(
         ctx.server.applyMiddleware({
           app: ctx.app,
           path: isProduction ? '/' : '/graphql',
-          cors: isProduction ? true : false,
+          cors: isProduction ? false : false,
         })
       },
     },

@@ -1,7 +1,8 @@
 import { ObjectType, Field } from 'type-graphql'
+import { Error } from './_authTypes'
 
 @ObjectType()
-export class ErrorResponse {
+export class MessageResponse {
   @Field()
   path: string
 
@@ -11,8 +12,11 @@ export class ErrorResponse {
 
 @ObjectType()
 export class ValidationResponse {
-  @Field(() => [ErrorResponse], { nullable: true })
-  errors?: [ErrorResponse]
+  @Field(() => [MessageResponse], { nullable: true })
+  message?: [MessageResponse]
+
+  @Field(() => [Error], { nullable: true })
+  errors?: [Error]
 
   @Field({ nullable: true })
   ok?: Boolean
