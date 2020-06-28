@@ -195,8 +195,8 @@ const startServer = new Listr(
               ? [process.env.FRONTEND_HOST as string]
               : [webUrl],
             credentials: true,
-            methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
-            preflightContinue: false,
+            // methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
+            // preflightContinue: false,
           })
         )
       },
